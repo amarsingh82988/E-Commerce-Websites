@@ -1,0 +1,103 @@
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { PageHeader, PageShell } from "@/components/site/Layout";
+import { Button } from "@/components/ui/button";
+import story from "@/assets/story-hands.jpg";
+import hero from "@/assets/hero-crochet.jpg";
+
+import { loadContent, type SiteContent } from "@/store/content";
+import { getSiteContent } from "@/api/content";
+
+const values = [
+  {
+    title: "Made by hand, never by machine",
+    body: "Every stitch is worked by hand. No two pieces are identical, and that is exactly the point.",
+  },
+  {
+    title: "Small batches, real people",
+    body: "We make in tiny runs so we can keep our quality high and pay our makers fairly.",
+  },
+  {
+    title: "Yarn we would keep",
+    body: "Soft, skin-friendly cottons and premium acrylics chosen so your piece lasts for years.",
+  },
+  {
+    title: "Made to be gifted",
+    body: "Wrapped with care, a handwritten note, and packaging you will not want to throw away.",
+  },
+];
+
+export default function AboutPage() {
+  const [siteContent, setSiteContent] = useState<SiteContent>(loadContent());
+
+  useEffect(() => {
+    getSiteContent().then((data) => {
+      if (data) setSiteContent(data);
+    });
+  }, []);
+
+  const about = siteContent.about;
+
+  return (
+    <PageShell>
+      <PageHeader
+        eyebrow="Our story"
+        title="Little things, made by hand"
+        intro="Apne Hath Crochet began at a kitchen table with one hook, one ball of cotton, and far too much patience."
+      />
+
+      <section className="container-page grid items-center gap-12 py-16 md:grid-cols-2 md:py-24">
+        <img
+          src={about.imageUrl || story}
+          alt="Hands crocheting a flower with a metal hook and cotton yarn"
+          className="rounded-3xl object-cover shadow-soft"
+          loading="lazy"
+        />
+        <div>
+          <h2 className="font-display text-3xl md:text-4xl">{about.title}</h2>
+          <p className="mt-4 text-muted-foreground whitespace-pre-line">
+            {about.content}
+          </p>
+          <Button asChild className="mt-8">
+            <Link to="/shop">Explore the collection</Link>
+          </Button>
+        </div>
+      </section>
+
+      <section className="border-y border-border bg-secondary/40 py-16 md:py-24">
+        <div className="container-page">
+          <p className="eyebrow text-center">What we believe</p>
+          <h2 className="mt-3 text-center font-display text-3xl md:text-4xl">The way we make things</h2>
+          <div className="mt-12 grid gap-6 sm:grid-cols-2">
+            {values.map((v) => (
+              <div key={v.title} className="rounded-2xl border border-border bg-card p-7 shadow-soft">
+                <h3 className="font-display text-xl">{v.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{v.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="container-page grid items-center gap-12 py-16 md:grid-cols-2 md:py-24">
+        <div>
+          <p className="eyebrow">Made for you</p>
+          <h2 className="mt-3 font-display text-3xl md:text-4xl">Want something that does not exist yet?</h2>
+          <p className="mt-4 text-muted-foreground">
+            Tell us the colours, the size and the occasion. We will sketch it, quote it and crochet it just
+            for you — from bridal bouquets to a tiny replica of your pet.
+          </p>
+          <Button asChild variant="secondary" className="mt-8">
+            <Link to="/custom-orders">Start a custom order</Link>
+          </Button>
+        </div>
+        <img
+          src={hero}
+          alt="A basket of finished crochet flowers and yarn in warm neutral tones"
+          className="rounded-3xl object-cover shadow-soft"
+          loading="lazy"
+        />
+      </section>
+    </PageShell>
+  );
+}
