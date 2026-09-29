@@ -66,8 +66,13 @@ export default function AboutPage() {
 
       <section className="border-y border-border bg-secondary/40 py-10 md:py-16">
         <div className="container-page">
-          <p className="eyebrow text-center">What we believe</p>
-          <h2 className="mt-3 text-center font-display text-3xl md:text-4xl">The way we make things</h2>
+          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 pb-4 border-b border-border/60">
+            <h2 className="font-display text-3xl md:text-4xl shrink-0">The way we make things</h2>
+            <div className="hidden md:block h-6 w-px bg-border shrink-0"></div>
+            <div className="inline-flex items-center rounded-full border border-primary/15 bg-primary/5 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-widest text-primary shrink-0 w-fit">
+              What we believe
+            </div>
+          </div>
           <div className="mt-6 md:mt-10 grid gap-6 sm:grid-cols-2">
             {values.map((v) => (
               <div key={v.title} className="rounded-2xl border border-border bg-card p-6 shadow-sm flex items-start gap-4">

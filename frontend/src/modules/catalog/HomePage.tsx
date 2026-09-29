@@ -95,59 +95,62 @@ export default function Home() {
       </section>
 
       {/* Categories */}
-      <section className="container-page py-12 md:py-16">
-        <SectionHead
-          eyebrow="Browse"
-          title="Featured Categories"
-          intro="From forever bouquets to everyday totes — find the piece that feels like you."
-        />
-        <div className="mt-6 md:mt-8 grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
-          {categoryList.slice(0, 7).map((c) => (
-            <Link
-              key={c.slug}
-              to={`/category/${c.slug}`}
-              className="group overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] transition-all hover:border-primary/50 hover:shadow-[var(--shadow-lift)] flex flex-col justify-between"
-            >
-              <div>
-                {c.image && (
-                  <div className="mb-3 aspect-video w-full overflow-hidden rounded-xl bg-secondary">
-                    <img
-                      src={c.image}
-                      alt={c.name}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                )}
-                <h3 className="font-display text-lg group-hover:text-primary transition-colors">{c.name}</h3>
-                <p className="mt-2 line-clamp-2 text-xs text-muted-foreground leading-relaxed">{c.description}</p>
-              </div>
-              <div className="mt-4 flex items-center text-xs font-semibold text-primary">
-                Explore <ArrowRight className="ml-1 size-3 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {categoryList.length > 0 && (
+        <section className="container-page py-12 md:py-16">
+          <SectionHead
+            eyebrow="Browse"
+            title="Featured Categories"
+            intro="From forever bouquets to everyday totes — find the piece that feels like you."
+          />
+          <div className="mt-6 md:mt-8 grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
+            {categoryList.slice(0, 7).map((c) => (
+              <Link
+                key={c.slug}
+                to={`/category/${c.slug}`}
+                className="group overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] transition-all hover:border-primary/50 hover:shadow-[var(--shadow-lift)] flex flex-col justify-between"
+              >
+                <div>
+                  {c.image && (
+                    <div className="mb-3 aspect-video w-full overflow-hidden rounded-xl bg-secondary">
+                      <img
+                        src={c.image}
+                        alt={c.name}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                  )}
+                  <h3 className="font-display text-lg group-hover:text-primary transition-colors">{c.name}</h3>
+                  <p className="mt-2 line-clamp-2 text-xs text-muted-foreground leading-relaxed">{c.description}</p>
+                </div>
+                <div className="mt-4 flex items-center text-xs font-semibold text-primary">
+                  Explore <ArrowRight className="ml-1 size-3 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Bestsellers */}
-      <section className="bg-secondary/40 py-12 md:py-16">
-        <div className="container-page">
-          <SectionHead eyebrow="Loved most" title="Best Sellers" intro="The pieces our customers keep coming back for." />
-          <div className="mt-6 md:mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {bestsellerList.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-
+      {bestsellerList.length > 0 && (
+        <section className="bg-secondary/40 py-12 md:py-16">
+          <div className="container-page">
+            <SectionHead eyebrow="Loved most" title="Best Sellers" intro="The pieces our customers keep coming back for." />
+            <div className="mt-6 md:mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {bestsellerList.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+            <div className="mt-6 md:mt-8 text-center">
+              <Button asChild variant="outline" size="lg">
+                <Link to="/shop">
+                  View all products <ArrowRight className="ml-1 size-4" />
+                </Link>
+              </Button>
+            </div>
           </div>
-          <div className="mt-6 md:mt-8 text-center">
-            <Button asChild variant="outline" size="lg">
-              <Link to="/shop">
-                View all products <ArrowRight className="ml-1 size-4" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Why us */}
       <section className="container-page py-12 md:py-16">
@@ -215,13 +218,13 @@ export default function Home() {
       </section>
 
       {/* Reviews */}
-      <section className="bg-secondary/40 py-12 md:py-16">
-        <div className="container-page">
-          <SectionHead eyebrow="Kind words" title="Customer Reviews" />
-          <div className="mt-6 md:mt-8 grid gap-6 md:grid-cols-3">
-            {featuredReviews.length > 0 ? (
-              featuredReviews.map((t) => (
-                <figure key={t.id} className="rounded-2xl border border-border bg-card p-6 flex flex-col h-full">
+      {featuredReviews.length > 0 && (
+        <section className="bg-secondary/40 py-12 md:py-16">
+          <div className="container-page">
+            <SectionHead eyebrow="Kind words" title="Customer Reviews" />
+            <div className="mt-6 md:mt-8 grid gap-6 md:grid-cols-3">
+              {featuredReviews.map((t) => (
+                <figure key={t.id} className="rounded-2xl border border-border bg-card p-6 flex flex-col h-full shadow-sm">
                   <div className="flex gap-0.5">
                     {Array.from({ length: t.rating }).map((_, i) => (
                       <Star key={i} className="size-4 fill-accent text-accent" />
@@ -239,44 +242,49 @@ export default function Home() {
                     {t.author}
                   </figcaption>
                 </figure>
-              ))
-            ) : (
-              <div className="col-span-3 text-center text-muted-foreground py-10">
-                Check back soon for new reviews!
-              </div>
-            )}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Instagram */}
-      <section className="container-page py-12 md:py-16">
-        <SectionHead eyebrow="@apnehathcrochet" title="From our studio" intro="Follow along for works in progress and new drops." />
-        <div className="mt-6 md:mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
-          {bestsellerList.slice(0, 4).map((p: any) => (
-            <div key={p.id} className="aspect-square overflow-hidden rounded-2xl border border-border bg-secondary">
-              <img
-                src={p.featuredImage}
-                alt={p.name}
-                loading="lazy"
-                width={900}
-                height={900}
-                className="size-full object-cover transition-transform duration-700 hover:scale-105"
-              />
-            </div>
-          ))}
-        </div>
-      </section>
+      {bestsellerList.length > 0 && (
+        <section className="container-page py-12 md:py-16">
+          <SectionHead eyebrow="@apnehathcrochet" title="From our studio" intro="Follow along for works in progress and new drops." />
+          <div className="mt-6 md:mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
+            {bestsellerList.slice(0, 4).map((p: any) => (
+              <div key={p.id} className="aspect-square overflow-hidden rounded-2xl border border-border bg-secondary shadow-sm">
+                <img
+                  src={p.featuredImage}
+                  alt={p.name}
+                  loading="lazy"
+                  width={900}
+                  height={900}
+                  className="size-full object-cover transition-transform duration-700 hover:scale-105"
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </PageShell>
   );
 }
 
 function SectionHead({ eyebrow, title, intro }: { eyebrow: string; title: string; intro?: string }) {
   return (
-    <div className="text-center">
-      <p className="eyebrow">{eyebrow}</p>
-      <h2 className="mt-3 font-display text-4xl">{title}</h2>
-      {intro && <p className="mx-auto mt-3 max-w-lg text-muted-foreground">{intro}</p>}
+    <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 pb-4 border-b border-border/60">
+      <h2 className="font-display text-3xl md:text-4xl shrink-0">{title}</h2>
+      <div className="hidden md:block h-6 w-px bg-border shrink-0"></div>
+      <div className="inline-flex items-center rounded-full border border-primary/15 bg-primary/5 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-widest text-primary shrink-0 w-fit">
+        {eyebrow}
+      </div>
+      {intro && (
+        <p className="text-sm text-muted-foreground md:ml-auto md:text-right line-clamp-2 md:line-clamp-1 max-w-xl">
+          {intro}
+        </p>
+      )}
     </div>
   );
 }
