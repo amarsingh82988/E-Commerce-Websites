@@ -22,6 +22,7 @@ export type StoreSettings = {
     provider: "razorpay" | "stripe" | "paypal" | "none";
     publicKey: string;
     privateKey: string;
+      webhookSecret: string;
   };
   shipping: {
     fee: number;
@@ -44,6 +45,7 @@ const defaultSettings: StoreSettings = {
     provider: "razorpay",
     publicKey: "",
     privateKey: "",
+      webhookSecret: "",
   },
   shipping: {
     fee: 79,
@@ -209,7 +211,7 @@ export default function AdminSettingsPage() {
               <div className="space-y-2">
                 <Label>Active Provider</Label>
                 <div className="grid grid-cols-3 gap-4">
-                  {["razorpay", "stripe", "paypal"].map((provider) => (
+                  {["razorpay"].map((provider) => (
                     <div
                       key={provider}
                       onClick={() => setSettings({ ...settings, paymentGateway: { ...settings.paymentGateway, provider: provider as any } })}
@@ -240,10 +242,24 @@ export default function AdminSettingsPage() {
                   <Input
                     id="privateKey"
                     type="password"
-                    value={settings.paymentGateway.privateKey}
+                    value={settings.paymentGateway?.privateKey || ""}
                     onChange={(e) => setSettings({ ...settings, paymentGateway: { ...settings.paymentGateway, privateKey: e.target.value } })}
+                    placeholder="Enter new private key to update"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">Leave empty to keep existing encrypted key.</p>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="webhookSecret">Webhook Secret</Label>
+                  <Input
+                    id="webhookSecret"
+                    type="password"
+                    value={settings.paymentGateway?.webhookSecret || ""}
+                    onChange={(e) => setSettings({ ...settings, paymentGateway: { ...settings.paymentGateway, webhookSecret: e.target.value } })}
+                    placeholder="Enter new webhook secret to update"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Leave empty to keep existing encrypted secret.</p>
+                </div>
+
                 
               </div>
             </CardContent>

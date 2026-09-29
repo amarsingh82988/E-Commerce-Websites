@@ -1,19 +1,11 @@
 import mongoose from "mongoose";
-import Razorpay from "razorpay";
 import crypto from "crypto";
 import { Order } from "./Order.js";
+import { Settings } from "../content/Settings.js";
 import { Product } from "../product/Product.js";
 import { env, isConfigured } from "../../config/env.js";
 import { Coupon } from "../coupon/Coupon.js";
 
-/** Initialize Razorpay instance if keys are configured */
-let razorpayInstance = null;
-if (isConfigured.razorpay) {
-  razorpayInstance = new Razorpay({
-    key_id: env.razorpay.keyId,
-    key_secret: env.razorpay.keySecret,
-  });
-}
 
 /** Helper function to calculate tamper-proof server-side totals */
 async function calculateServerTotals(rawItems, paymentMethod, couponCode, session = null) {
@@ -84,9 +76,14 @@ async function calculateServerTotals(rawItems, paymentMethod, couponCode, sessio
     validCoupon = couponDoc;
   }
 
+  let settings = await Settings.findOne().lean();
+  if (!settings || !settings.shipping) {
+    settings = { shipping: { fee: 79, freeThreshold: 1499, codFee: 49 } };
+  }
+
   const afterDiscount = Math.max(0, subtotal - discount);
-  const shippingFee = subtotal === 0 || subtotal >= 1499 ? 0 : 79;
-  const codFee = paymentMethod === "cod" ? 49 : 0;
+  const shippingFee = subtotal === 0 || subtotal >= (settings.shipping.freeThreshold ?? 1499) ? 0 : (settings.shipping.fee ?? 79);
+  const codFee = paymentMethod === "cod" ? (settings.shipping.codFee ?? 49) : 0;
   const total = afterDiscount + shippingFee + codFee;
 
   return {

@@ -83,6 +83,7 @@ router.get("/", async (req, res) => {
 });
 
 import { deleteFromCloudinary } from "../../utils/cloudinary.service.js";
+import { encrypt, decrypt } from "../../utils/crypto.service.js";
 
 /**
  * PUT /api/content - Protected admin endpoint to update site content
@@ -126,9 +127,19 @@ router.put("/", protectContentAdmin, async (req, res) => {
  */
 router.get("/settings", protectContentAdmin, async (req, res) => {
   try {
-    let settings = await Settings.findOne();
+    let settings = await Settings.findOne().lean();
     if (!settings) {
       settings = await Settings.create({ storeName: "Apne Hath Crafts" });
+      settings = settings.toObject();
+    }
+    // Decrypt keys to send to admin, but mask them
+    if (settings.paymentGateway?.privateKey) {
+       const decrypted = decrypt(settings.paymentGateway.privateKey);
+       settings.paymentGateway.privateKey = decrypted ? "HIDDEN:" + decrypted.substring(0, 4) + "***" : "";
+    }
+    if (settings.paymentGateway?.webhookSecret) {
+       const decrypted = decrypt(settings.paymentGateway.webhookSecret);
+       settings.paymentGateway.webhookSecret = decrypted ? "HIDDEN:" + decrypted.substring(0, 4) + "***" : "";
     }
     return res.json(settings);
   } catch (err) {
@@ -143,6 +154,22 @@ router.put("/settings", protectContentAdmin, async (req, res) => {
   try {
     const updateData = req.body;
     let settings = await Settings.findOne();
+    
+    // Encrypt secrets if they were updated (and are not the hidden mask)
+    if (updateData.paymentGateway) {
+       if (updateData.paymentGateway.privateKey && updateData.paymentGateway.privateKey.startsWith("HIDDEN:")) {
+          delete updateData.paymentGateway.privateKey;
+       } else if (updateData.paymentGateway.privateKey) {
+          updateData.paymentGateway.privateKey = encrypt(updateData.paymentGateway.privateKey);
+       }
+       
+       if (updateData.paymentGateway.webhookSecret && updateData.paymentGateway.webhookSecret.startsWith("HIDDEN:")) {
+          delete updateData.paymentGateway.webhookSecret;
+       } else if (updateData.paymentGateway.webhookSecret) {
+          updateData.paymentGateway.webhookSecret = encrypt(updateData.paymentGateway.webhookSecret);
+       }
+    }
+
     if (!settings) {
       settings = await Settings.create(updateData);
     } else {
@@ -151,6 +178,34 @@ router.put("/settings", protectContentAdmin, async (req, res) => {
     return res.json({ success: true, settings });
   } catch (err) {
     return res.status(500).json({ message: "Server error updating settings" });
+  }
+});
+
+
+/**
+ * GET /api/v1/content/public-settings - Public endpoint to get shipping/payment config
+ */
+router.get("/public-settings", async (req, res) => {
+  try {
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = await Settings.create({ storeName: "Apne Hath Crafts" });
+    }
+    // Return only safe public fields
+    return res.json({
+      storeName: settings.storeName,
+      contactEmail: settings.contactEmail,
+      phone: settings.phone,
+      address: settings.address,
+      socialLinks: settings.socialLinks,
+      shipping: settings.shipping,
+      paymentGateway: {
+        provider: settings.paymentGateway?.provider,
+        publicKey: settings.paymentGateway?.publicKey,
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ message: "Server error fetching public settings" });
   }
 });
 

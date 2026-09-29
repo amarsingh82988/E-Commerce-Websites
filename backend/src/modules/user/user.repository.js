@@ -40,7 +40,7 @@ export async function getCart(userId) {
   }));
 }
 
-export async function updateCart(userId, rawItems) {
+export async function updateCart(userId, rawItems, opts = {}) {
   const formattedItems = (rawItems || []).map((item) => ({
     productId: (item.productId || item.product || item._id || "").toString(),
     qty: item.qty || item.quantity || 1,

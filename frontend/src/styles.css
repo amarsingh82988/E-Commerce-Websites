@@ -197,9 +197,7 @@
 }
 
 /* --- Scrollbar Customization --- */
-html, body {
-  scrollbar-gutter: stable; /* Prevent UI shifting when scrollbar appears */
-}
+
 
 /* Thin Scrollbar for Webkit */
 ::-webkit-scrollbar {

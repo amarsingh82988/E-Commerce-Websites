@@ -10,10 +10,12 @@ const settingsSchema = new mongoose.Schema({
     provider: { type: String, default: "razorpay" },
     publicKey: String,
     privateKey: String,
+    webhookSecret: String,
   },
   shipping: {
     fee: { type: Number, default: 79 },
     freeThreshold: { type: Number, default: 1499 },
+    codFee: { type: Number, default: 49 },
   }
 }, { timestamps: true });
 
