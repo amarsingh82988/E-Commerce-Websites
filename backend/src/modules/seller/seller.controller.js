@@ -1,4 +1,5 @@
 import { sellerService } from "./seller.service.js";
+import { User } from "../user/User.js";
 import { categoryRepository } from "../category/category.repository.js";
 import { productRepository } from "../product/product.repository.js";
 import { orderRepository } from "../order/order.repository.js";
@@ -10,6 +11,20 @@ import { sessionService } from "../session/session.service.js";
 
 export async function sellerRegister(req, res) {
   try {
+    // --- SINGLE SELLER MODE TOGGLE ---
+    // Change this to false if you want to allow multiple sellers to register.
+    const IS_SINGLE_SELLER_MODE = true;
+    // ---------------------------------
+
+    if (IS_SINGLE_SELLER_MODE) {
+      const existingSeller = await User.findOne({ role: "seller" }).lean();
+      if (existingSeller) {
+        return res.status(403).json({ 
+          message: "Registration is currently closed. Only one seller account is allowed in single-seller mode." 
+        });
+      }
+    }
+
     const { name, email, password, phone } = req.body;
     if (!name || !email || !password || !phone) {
       return res.status(400).json({ message: "Name, email, phone and password are required" });
