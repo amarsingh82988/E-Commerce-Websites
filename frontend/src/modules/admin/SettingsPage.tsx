@@ -95,7 +95,7 @@ export default function AdminSettingsPage() {
       try {
         await updateStoreSettings(settings);
         toast.success("Settings saved successfully");
-      } catch (err) {
+      } catch {
         toast.error("Failed to save settings to server.");
       }
     }

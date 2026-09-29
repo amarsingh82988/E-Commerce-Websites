@@ -310,7 +310,7 @@ export async function deleteProduct(req, res) {
     if (!oldProduct) return res.status(404).json({ message: "Product not found" });
 
     // --- MULTI-VENDOR: softDeleteProduct checks seller ownership ---
-    const deleted = await productRepository.softDeleteProduct(id, req.user._id, sellerId);
+    await productRepository.softDeleteProduct(id, req.user._id, sellerId);
 
     // Cleanup images from Cloudinary when deleted from DB
     if (oldProduct.images && Array.isArray(oldProduct.images)) {
@@ -419,7 +419,7 @@ export async function deleteCategory(req, res) {
     const oldCategory = await categoryRepository.findCategoryById(id);
     if (!oldCategory) return res.status(404).json({ message: "Category not found" });
 
-    const deleted = await categoryRepository.deleteCategory(id);
+    await categoryRepository.deleteCategory(id);
 
     // Cleanup image from Cloudinary when deleted from DB
     if (oldCategory.image) {

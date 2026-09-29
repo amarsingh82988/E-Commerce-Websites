@@ -3,7 +3,7 @@ import { Order } from "./Order.js";
 export async function findOrderById(id) {
   try {
     return await Order.findOne({ _id: id, isDeleted: false }).populate("user items.product").exec();
-  } catch (err) {
+  } catch (_err) {
     return null; // Ignore CastError for invalid ObjectIds
   }
 }

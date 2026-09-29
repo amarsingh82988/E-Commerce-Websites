@@ -88,7 +88,7 @@ export async function getAddresses(userId) {
   return addressDoc ? addressDoc.addresses : [];
 }
 
-export async function updateAddresses(userId, addresses, opts = {}) {
+export async function updateAddresses(userId, addresses, _opts = {}) {
   const addressDoc = await Address.findOneAndUpdate(
     { userId },
     { addresses: addresses || [] },

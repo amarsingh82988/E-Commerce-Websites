@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { userRepository } from "./user.repository.js";
 import { otpRepository } from "../otp/otp.repository.js";
 import { hashCode } from "../otp/Otp.js";
-import { env } from "../../config/env.js";
+// import { env } from "../../config/env.js";
 import { generateOtpCode, sendOtpEmail } from "../../utils/email.service.js";
 
 export async function register(name, email, password, phone, role = "customer") {

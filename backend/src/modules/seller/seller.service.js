@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import { userRepository } from "../user/user.repository.js";
 import { otpRepository } from "../otp/otp.repository.js";
 import { hashCode } from "../otp/Otp.js";
-import { env } from "../../config/env.js";
+// import { env } from "../../config/env.js";
 import { Order as _Order } from "../order/Order.js";
 import { generateOtpCode, sendOtpEmail } from "../../utils/email.service.js";
 

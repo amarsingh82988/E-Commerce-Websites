@@ -62,7 +62,7 @@ export default function AdminOrdersPage() {
         }
         toast.success(`Order ${id} marked as ${statusLabel[newStatus]}`);
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to update order status");
     }
   };

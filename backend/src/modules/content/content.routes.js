@@ -2,7 +2,7 @@ import express from "express";
 
 import { Content } from "./Content.js";
 import { Settings } from "./Settings.js";
-import { env } from "../../config/env.js";
+// import { env } from "../../config/env.js";
 
 const router = express.Router();
 
@@ -148,7 +148,7 @@ router.get("/settings", protectContentAdmin, async (req, res) => {
        settings.paymentGateway.webhookSecret = decrypted ? "HIDDEN:" + decrypted.substring(0, 4) + "***" : "";
     }
     return res.json(settings);
-  } catch (err) {
+  } catch (_err) {
     return res.status(500).json({ message: "Server error fetching settings" });
   }
 });
@@ -189,7 +189,7 @@ router.put("/settings", protectContentAdmin, async (req, res) => {
       settings = await Settings.findOneAndUpdate({ _id: settings._id }, updateData, { new: true });
     }
     return res.json({ success: true, settings });
-  } catch (err) {
+  } catch (_err) {
     return res.status(500).json({ message: "Server error updating settings" });
   }
 });
@@ -217,7 +217,7 @@ router.get("/public-settings", async (req, res) => {
         publicKey: settings.paymentGateway?.publicKey,
       }
     });
-  } catch (err) {
+  } catch (_err) {
     return res.status(500).json({ message: "Server error fetching public settings" });
   }
 });

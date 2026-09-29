@@ -100,12 +100,10 @@ export async function createProduct(data) {
     }
   }
 
-  let baseSlug = data.slug ? slugify(data.slug, { lower: true, strict: true }) : slugify(data.name, { lower: true, strict: true });
+  const baseSlug = data.slug ? slugify(data.slug, { lower: true, strict: true }) : slugify(data.name, { lower: true, strict: true });
   let uniqueSlug = baseSlug;
-  let slugCounter = 1;
   while (await Product.exists({ slug: uniqueSlug })) {
     uniqueSlug = `${baseSlug}-${Math.floor(1000 + Math.random() * 9000)}`;
-    slugCounter++;
   }
   data.slug = uniqueSlug;
 
