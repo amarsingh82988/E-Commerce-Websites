@@ -330,7 +330,6 @@ function ProductFormSheet({
         description: "",
         price: undefined,
         compareAtPrice: undefined,
-        shippingCost: undefined,
         category: "",
         sku: "",
         stock: undefined,
@@ -400,6 +399,10 @@ function ProductFormSheet({
       toast.error("Please fill in required fields");
       return;
     }
+    if (formData.compareAtPrice && Number(formData.price) >= Number(formData.compareAtPrice)) {
+      toast.error("Selling price must be less than the Original MRP.");
+      return;
+    }
 
     const newProduct: Product = {
       id: product?.id || Date.now().toString(),
@@ -410,7 +413,6 @@ function ProductFormSheet({
       description: formData.description || "",
       price: Number(formData.price),
       compareAtPrice: formData.compareAtPrice ? Number(formData.compareAtPrice) : undefined,
-      shippingCost: formData.shippingCost ? Number(formData.shippingCost) : 0,
       category: formData.category!,
       stock: Number(formData.stock || 0),
       images: formData.images || [],
@@ -483,7 +485,7 @@ function ProductFormSheet({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Price (₹) *</Label>
+              <Label htmlFor="price">Selling Price (₹) *</Label>
               <Input
                 id="price"
                 type="number"
@@ -494,7 +496,7 @@ function ProductFormSheet({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="compareAtPrice">Discount Price (₹)</Label>
+              <Label htmlFor="compareAtPrice">Original MRP (Compare at Price) (₹)</Label>
               <Input
                 id="compareAtPrice"
                 type="number"
@@ -505,16 +507,7 @@ function ProductFormSheet({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="shippingCost">Shipping Cost (₹)</Label>
-            <Input
-              id="shippingCost"
-              type="number"
-              min="0"
-              value={formData.shippingCost === undefined ? "" : formData.shippingCost}
-              onChange={(e) => setFormData({ ...formData, shippingCost: Number(e.target.value) })}
-            />
-          </div>
+
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

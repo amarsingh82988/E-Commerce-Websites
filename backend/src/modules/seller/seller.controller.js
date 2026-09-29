@@ -140,7 +140,7 @@ export async function createProduct(req, res) {
       description,
       price,
       compareAtPrice,
-      shippingCost,
+      
       category,
       stock,
       images,
@@ -170,7 +170,6 @@ export async function createProduct(req, res) {
       description: description || "",
       price: Number(price),
       compareAtPrice: compareAtPrice ? Number(compareAtPrice) : undefined,
-      shippingCost: shippingCost ? Number(shippingCost) : 0,
       category,
       stock: stock ? Number(stock) : 0,
       images: images || [],
