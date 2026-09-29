@@ -2,9 +2,11 @@ import mongoose from "mongoose";
 import crypto from "crypto";
 import { Order } from "./Order.js";
 import { Settings } from "../content/Settings.js";
+import { decrypt } from "../../utils/crypto.service.js";
 import { Product } from "../product/Product.js";
-import { env, isConfigured } from "../../config/env.js";
+import { env } from "../../config/env.js";
 import { Coupon } from "../coupon/Coupon.js";
+import Razorpay from "razorpay";
 
 
 /** Helper function to calculate tamper-proof server-side totals */
@@ -203,9 +205,40 @@ export async function createOrder(req, res) {
 
     // 4. Handle Razorpay Payment
     let razorpayOrderId = "";
-    const razorpayKeyId = env.razorpay.keyId;
+    let razorpayKeyId = "";
+    let razorpaySecret = "";
 
-    if (razorpayInstance) {
+    // --- SINGLE SELLER MODE TOGGLE ---
+    // If you want to enable MULTIPLE SELLERS, comment out this variable below and set it to false.
+    const IS_SINGLE_SELLER_MODE = true; 
+    // ---------------------------------
+
+    const settingsObj = await Settings.findOne().lean();
+
+    if (IS_SINGLE_SELLER_MODE) {
+       // Single Seller Mode: Use DB settings if configured, otherwise fallback to .env credentials
+       if (settingsObj?.paymentGateway?.provider === "razorpay" && settingsObj.paymentGateway.publicKey) {
+           razorpayKeyId = settingsObj.paymentGateway.publicKey;
+           razorpaySecret = decrypt(settingsObj.paymentGateway.privateKey) || env.razorpay.keySecret;
+       } else {
+           razorpayKeyId = env.razorpay.keyId;
+           razorpaySecret = env.razorpay.keySecret;
+       }
+    } else {
+       // Multiple Seller Mode: DO NOT use .env fallback. Use strictly the seller's payment credentials.
+       // Note: In a fully multi-vendor setup, you would fetch Settings/Credentials based on the specific Seller's ID!
+       if (settingsObj?.paymentGateway?.provider === "razorpay" && settingsObj.paymentGateway.publicKey) {
+           razorpayKeyId = settingsObj.paymentGateway.publicKey;
+           razorpaySecret = decrypt(settingsObj.paymentGateway.privateKey) || "";
+       }
+    }
+
+    let dynamicRazorpay = null;
+    if (razorpayKeyId && razorpaySecret) {
+       dynamicRazorpay = new Razorpay({ key_id: razorpayKeyId, key_secret: razorpaySecret });
+    }
+
+    if (dynamicRazorpay) {
       const options = {
         amount: Math.round(total * 100),
         currency: "INR",
@@ -215,7 +248,7 @@ export async function createOrder(req, res) {
           userId: String(userId),
         },
       };
-      const rzpOrder = await razorpayInstance.orders.create(options);
+      const rzpOrder = await dynamicRazorpay.orders.create(options);
       razorpayOrderId = rzpOrder.id;
     } else {
       razorpayOrderId = `rzp_order_mock_${Date.now()}`;
@@ -303,9 +336,28 @@ export async function verifyRazorpayPayment(req, res) {
     session.startTransaction();
 
     // HMAC SHA256 Signature Verification
-    if (isConfigured.razorpay) {
+    // --- SINGLE SELLER MODE TOGGLE ---
+    const IS_SINGLE_SELLER_MODE = true; 
+    // ---------------------------------
+    
+    let rzpSecret = "";
+    const settingsObj = await Settings.findOne().lean();
+    
+    if (IS_SINGLE_SELLER_MODE) {
+       if (settingsObj?.paymentGateway?.provider === "razorpay" && settingsObj.paymentGateway.privateKey) {
+           rzpSecret = decrypt(settingsObj.paymentGateway.privateKey) || env.razorpay.keySecret;
+       } else {
+           rzpSecret = env.razorpay.keySecret;
+       }
+    } else {
+       if (settingsObj?.paymentGateway?.provider === "razorpay" && settingsObj.paymentGateway.privateKey) {
+           rzpSecret = decrypt(settingsObj.paymentGateway.privateKey) || "";
+       }
+    }
+
+    if (rzpSecret) {
       const generated_signature = crypto
-        .createHmac("sha256", env.razorpay.keySecret)
+        .createHmac("sha256", rzpSecret)
         .update(razorpay_order_id + "|" + razorpay_payment_id)
         .digest("hex");
 
@@ -314,8 +366,8 @@ export async function verifyRazorpayPayment(req, res) {
         order.timeline.push({ status: "failed", note: "Razorpay signature verification failed", at: new Date() });
         await order.save({ session });
 
-      await session.commitTransaction();
-      session.endSession();
+        await session.commitTransaction();
+        session.endSession();
         return res.status(400).json({ message: "Payment verification failed. Invalid signature." });
       }
     }
