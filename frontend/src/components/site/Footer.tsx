@@ -18,7 +18,6 @@ const columns = [
       { to: "/faq", label: "FAQ" },
       { to: "/shipping-policy", label: "Shipping" },
       { to: "/return-policy", label: "Returns" },
-      { to: "/track-order", label: "Track Order" },
     ],
   },
   {

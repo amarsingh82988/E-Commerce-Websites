@@ -47,3 +47,21 @@ export async function updateSiteContent(content: SiteContent): Promise<SiteConte
 
   return json.content;
 }
+
+
+/**
+ * Public API: Fetch public store settings (shipping config, etc)
+ */
+export async function getPublicSettings(): Promise<any> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/content/public-settings`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!res.ok) throw new Error("Failed to fetch public settings");
+    return await res.json();
+  } catch (err) {
+    console.error("Error fetching public settings:", err);
+    return null;
+  }
+}

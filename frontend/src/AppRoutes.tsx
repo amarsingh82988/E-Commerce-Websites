@@ -14,7 +14,6 @@ import {
   // Order
   CheckoutPage,
   OrderConfirmationPage,
-  TrackOrderPage,
   CustomOrdersPage,
   // User
   UserLoginPage as LoginPage,
@@ -83,7 +82,6 @@ export default function AppRoutes() {
           <Route path="/shipping-policy" element={<ShippingPolicyPage />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/terms" element={<TermsPage />} />
-          <Route path="/track-order" element={<TrackOrderPage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
           <Route
             path="/profile"

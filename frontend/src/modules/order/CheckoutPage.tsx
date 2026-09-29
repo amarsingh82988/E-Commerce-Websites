@@ -12,6 +12,7 @@ import { formatINR } from "@/lib/format";
 import { useShop } from "@/store/shop";
 import { useAuth } from "@/context/AuthContext";
 import { createOrder, verifyRazorpayPayment } from "@/api/orders";
+import { getPublicSettings } from "@/api/content";
 import { applyCoupon } from "@/api/coupons";
 import { Tag, X } from "lucide-react";
 
@@ -39,6 +40,21 @@ export default function CheckoutPage() {
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
+
+
+  const [shippingConfig, setShippingConfig] = useState({ fee: 79, freeThreshold: 1499, codFee: 49 });
+
+  useEffect(() => {
+    getPublicSettings().then(data => {
+      if (data?.shipping) {
+        setShippingConfig({
+          fee: data.shipping.fee ?? 79,
+          freeThreshold: data.shipping.freeThreshold ?? 1499,
+          codFee: data.shipping.codFee ?? 49
+        });
+      }
+    });
+  }, []);
 
   const [form, setForm] = useState({
     name: "",
@@ -96,8 +112,8 @@ export default function CheckoutPage() {
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const discount = appliedCoupon?.discountAmount ?? 0;
-  const shipping = subtotal >= 1499 ? 0 : 79;
-  const codFee = payment === "cod" ? 49 : 0;
+  const shipping = subtotal >= shippingConfig.freeThreshold ? 0 : shippingConfig.fee;
+  const codFee = payment === "cod" ? shippingConfig.codFee : 0;
   const total = Math.max(0, subtotal - discount) + shipping + codFee;
 
   if (cart.length === 0) {
@@ -322,7 +338,7 @@ export default function CheckoutPage() {
                 <span>
                   <span className="block font-medium">Razorpay (UPI, Cards, NetBanking, Wallets)</span>
                   <span className="block text-xs text-muted-foreground mt-0.5">
-                    Fast &amp; 100% secure payment via Razorpay. Free shipping over ₹1,499.
+                    Fast &amp; 100% secure payment via Razorpay. Free shipping over ₹{shippingConfig.freeThreshold}.
                   </span>
                 </span>
               </label>

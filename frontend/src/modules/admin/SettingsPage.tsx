@@ -26,6 +26,7 @@ export type StoreSettings = {
   shipping: {
     fee: number;
     freeThreshold: number;
+    codFee: number;
   };
 };
 
@@ -47,6 +48,7 @@ const defaultSettings: StoreSettings = {
   shipping: {
     fee: 79,
     freeThreshold: 1499,
+    codFee: 49,
   },
 };
 
@@ -55,7 +57,15 @@ const defaultSettings: StoreSettings = {
 export async function fetchStoreSettings(): Promise<StoreSettings> {
   try {
     const data = await fetchApi("/content/settings");
-    if (data) return data as StoreSettings;
+    if (data) {
+      return {
+        ...defaultSettings,
+        ...data,
+        socialLinks: { ...defaultSettings.socialLinks, ...(data.socialLinks || {}) },
+        paymentGateway: { ...defaultSettings.paymentGateway, ...(data.paymentGateway || {}) },
+        shipping: { ...defaultSettings.shipping, ...(data.shipping || {}) }
+      };
+    }
   } catch (err) {
     console.error("Failed to fetch settings from DB, falling back to default", err);
   }
@@ -100,9 +110,10 @@ export default function AdminSettingsPage() {
       </div>
 
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6 max-w-md">
+        <TabsList className="grid w-full grid-cols-3 mb-6 max-w-md">
           <TabsTrigger value="general">General Info</TabsTrigger>
           <TabsTrigger value="payment">Payment Gateway</TabsTrigger>
+          <TabsTrigger value="shipping">Shipping & COD</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-6">
@@ -238,6 +249,49 @@ export default function AdminSettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+      
+        <TabsContent value="shipping" className="space-y-6">
+          <Card className="shadow-soft">
+            <CardHeader>
+              <CardTitle>Shipping & Delivery Settings</CardTitle>
+              <CardDescription>Configure shipping fees and Cash on Delivery charges.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="shippingFee">Standard Shipping Fee (₹)</Label>
+                  <Input
+                    id="shippingFee"
+                    type="number"
+                    value={settings.shipping?.fee ?? 79}
+                    onChange={(e) => setSettings({ ...settings, shipping: { ...settings.shipping, fee: Number(e.target.value) } })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="freeThreshold">Free Shipping Threshold (₹)</Label>
+                  <Input
+                    id="freeThreshold"
+                    type="number"
+                    value={settings.shipping?.freeThreshold ?? 1499}
+                    onChange={(e) => setSettings({ ...settings, shipping: { ...settings.shipping, freeThreshold: Number(e.target.value) } })}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Orders above this amount will have free shipping.</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="codFee">Cash on Delivery (COD) Fee (₹)</Label>
+                  <Input
+                    id="codFee"
+                    type="number"
+                    value={settings.shipping?.codFee ?? 49}
+                    onChange={(e) => setSettings({ ...settings, shipping: { ...settings.shipping, codFee: Number(e.target.value) } })}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Extra charge for customers choosing COD.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
       </Tabs>
     </div>
   );

@@ -36,7 +36,7 @@ const allNavItems = [
   { name: "Coupons",        to: "/seller/coupons",        icon: Ticket,           roles: ["seller", "superadmin"] },
   // SuperAdmin only
   { name: "Customers",      to: "/seller/customers",      icon: Users,            roles: ["superadmin"] },
-  { name: "Settings",       to: "/seller/settings",       icon: Settings,         roles: ["superadmin"] },
+  { name: "Settings",       to: "/seller/settings",       icon: Settings,         roles: ["seller", "superadmin"] },
 ];
 
 export function AdminLayout() {

@@ -50,10 +50,10 @@ export default function AdminOrdersPage() {
 
     const updateOrderStatus = async (id: string, newStatus: OrderDetails["status"]) => {
     try {
-      await updateSellerOrderStatus(id, newStatus);
+      await updateSellerOrderStatus(id, newStatus, statusUpdateNote, trackingNumber, courier);
       const orderIndex = orders.findIndex((o) => (o._id === id || o.orderNumber === id));
       if (orderIndex !== -1) {
-        const updatedOrder = { ...orders[orderIndex], status: newStatus };
+        const updatedOrder = { ...orders[orderIndex], status: newStatus, courier: courier || orders[orderIndex].courier, trackingNumber: trackingNumber || orders[orderIndex].trackingNumber };
         const newOrders = [...orders];
         newOrders[orderIndex] = updatedOrder;
         setOrders(newOrders);
