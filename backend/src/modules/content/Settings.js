@@ -20,6 +20,7 @@ const settingsSchema = new mongoose.Schema({
     fee: { type: Number, default: 79 },
     freeThreshold: { type: Number, default: 1499 },
     codFee: { type: Number, default: 49 },
+    codEnabled: { type: Boolean, default: true },
   }
 }, { timestamps: true });
 

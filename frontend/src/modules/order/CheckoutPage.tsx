@@ -42,7 +42,7 @@ export default function CheckoutPage() {
   const [validatingCoupon, setValidatingCoupon] = useState(false);
 
 
-  const [shippingConfig, setShippingConfig] = useState({ fee: 79, freeThreshold: 1499, codFee: 49 });
+  const [shippingConfig, setShippingConfig] = useState({ fee: 79, freeThreshold: 1499, codFee: 49, codEnabled: true });
 
   useEffect(() => {
     getPublicSettings().then(data => {
@@ -50,7 +50,8 @@ export default function CheckoutPage() {
         setShippingConfig({
           fee: data.shipping.fee ?? 79,
           freeThreshold: data.shipping.freeThreshold ?? 1499,
-          codFee: data.shipping.codFee ?? 49
+          codFee: data.shipping.codFee ?? 49,
+          codEnabled: data.shipping.codEnabled ?? true
         });
       }
     });
@@ -290,6 +291,47 @@ export default function CheckoutPage() {
 
           <section className="rounded-3xl border border-border bg-card p-7 shadow-soft">
             <h2 className="font-display text-2xl">Delivery details</h2>
+            {user?.addresses && user.addresses.length > 0 && (
+              <div className="mt-4">
+                <Label className="text-muted-foreground mb-3 block">Saved Addresses</Label>
+                <div className="flex flex-col gap-3">
+                  {user.addresses.map((addr: any, i: number) => (
+                    <div 
+                      key={i} 
+                      onClick={() => setForm(f => ({
+                        ...f,
+                        name: addr.fullName || user.name || "",
+                        phone: addr.phone || user.phone || "",
+                        address: addr.line1 || "",
+                        city: addr.city || "",
+                        state: addr.state || "",
+                        pin: addr.pincode || ""
+                      }))}
+                      className="cursor-pointer rounded-xl border border-border p-3 transition-colors hover:border-primary/50 hover:bg-secondary/40 flex items-start gap-3"
+                    >
+                      <input 
+                        type="radio" 
+                        name="saved-address" 
+                        className="mt-1"
+                        checked={form.address === addr.line1 && form.pin === addr.pincode}
+                        readOnly
+                      />
+                      <div className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground block">{addr.fullName || user.name}</span>
+                        {addr.line1}, {addr.city}, {addr.state} {addr.pincode}
+                      </div>
+                    </div>
+                  ))}
+                  <div 
+                    onClick={() => setForm(f => ({ ...f, address: "", city: "", state: "", pin: "" }))}
+                    className="cursor-pointer rounded-xl border border-dashed border-border p-3 transition-colors hover:border-primary/50 text-sm text-center text-primary font-medium"
+                  >
+                    + Use a different address
+                  </div>
+                </div>
+                <div className="my-6 border-t border-border"></div>
+              </div>
+            )}
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="fname">Full name *</Label>
@@ -342,15 +384,17 @@ export default function CheckoutPage() {
                   </span>
                 </span>
               </label>
-              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border p-4 transition-colors hover:bg-secondary/40">
-                <RadioGroupItem value="cod" id="pay-cod" className="mt-1" />
-                <span>
-                  <span className="block font-medium">Cash on Delivery (COD)</span>
-                  <span className="block text-xs text-muted-foreground mt-0.5">
-                    Pay in cash upon doorstep delivery. Additional ₹49 COD fee.
+              {shippingConfig.codEnabled && (
+                <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border p-4 transition-colors hover:bg-secondary/40">
+                  <RadioGroupItem value="cod" id="pay-cod" className="mt-1" />
+                  <span>
+                    <span className="block font-medium">Cash on Delivery (COD)</span>
+                    <span className="block text-xs text-muted-foreground mt-0.5">
+                      Pay in cash upon doorstep delivery. Additional ₹{shippingConfig.codFee} COD fee.
+                    </span>
                   </span>
-                </span>
-              </label>
+                </label>
+              )}
             </RadioGroup>
             <p className="mt-5 flex items-center gap-2 text-xs text-muted-foreground">
               <ShieldCheck className="size-4 text-accent" /> Server-verified tamper-proof pricing &amp; 256-bit encryption.

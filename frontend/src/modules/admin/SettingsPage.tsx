@@ -28,6 +28,7 @@ export type StoreSettings = {
     fee: number;
     freeThreshold: number;
     codFee: number;
+    codEnabled: boolean;
   };
 };
 
@@ -45,12 +46,13 @@ const defaultSettings: StoreSettings = {
     provider: "razorpay",
     publicKey: "",
     privateKey: "",
-      webhookSecret: "",
+    webhookSecret: "",
   },
   shipping: {
     fee: 79,
     freeThreshold: 1499,
     codFee: 49,
+    codEnabled: true,
   },
 };
 
@@ -273,6 +275,19 @@ export default function AdminSettingsPage() {
               <CardDescription>Configure shipping fees and Cash on Delivery charges.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="flex items-center space-x-3 bg-secondary/30 p-4 rounded-xl border border-border mb-6">
+                <input
+                  id="codEnabled"
+                  type="checkbox"
+                  className="w-5 h-5 rounded border-gray-300 text-primary cursor-pointer"
+                  checked={settings.shipping?.codEnabled ?? true}
+                  onChange={(e) => setSettings({ ...settings, shipping: { ...settings.shipping, codEnabled: e.target.checked } })}
+                />
+                <div>
+                  <Label htmlFor="codEnabled" className="text-base font-semibold block cursor-pointer">Enable Cash on Delivery (COD)</Label>
+                  <p className="text-sm text-muted-foreground mt-0.5">Allow customers to pay with cash upon delivery.</p>
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="shippingFee">Standard Shipping Fee (₹)</Label>

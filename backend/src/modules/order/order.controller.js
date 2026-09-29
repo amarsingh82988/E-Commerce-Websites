@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import crypto from "crypto";
 import { Order } from "./Order.js";
+import { Address } from "../user/Address.js";
 import { Settings } from "../content/Settings.js";
 import { decrypt } from "../../utils/crypto.service.js";
 import { Product } from "../product/Product.js";
@@ -82,7 +83,11 @@ async function calculateServerTotals(rawItems, paymentMethod, couponCode, sessio
 
   let settings = await Settings.findOne().lean();
   if (!settings || !settings.shipping) {
-    settings = { shipping: { fee: 79, freeThreshold: 1499, codFee: 49 } };
+    settings = { shipping: { fee: 79, freeThreshold: 1499, codFee: 49, codEnabled: true } };
+  }
+
+  if (paymentMethod === "cod" && settings.shipping.codEnabled === false) {
+    throw new Error("Cash on Delivery is currently disabled by the seller.");
   }
 
   const afterDiscount = Math.max(0, subtotal - discount);
@@ -186,6 +191,36 @@ export async function createOrder(req, res) {
     if (validCoupon) {
       validCoupon.usedCount = (validCoupon.usedCount || 0) + 1;
       await validCoupon.save({ session });
+    }
+
+    // Auto-save address for future use
+    try {
+      let userAddressDoc = await Address.findOne({ userId }).session(session);
+      if (!userAddressDoc) {
+        userAddressDoc = new Address({ userId, addresses: [] });
+      }
+
+      const isNewAddr = !userAddressDoc.addresses.some(
+        (a) => a.line1.toLowerCase().trim() === shippingAddress.line1.toLowerCase().trim() && a.pincode === shippingAddress.pincode
+      );
+
+      if (isNewAddr) {
+        userAddressDoc.addresses.push({
+          label: "Home",
+          fullName: shippingAddress.fullName.trim(),
+          phone: shippingAddress.phone.trim(),
+          line1: shippingAddress.line1.trim(),
+          line2: shippingAddress.line2 ? shippingAddress.line2.trim() : "",
+          city: shippingAddress.city ? shippingAddress.city.trim() : "",
+          state: shippingAddress.state ? shippingAddress.state.trim() : "",
+          pincode: shippingAddress.pincode.trim(),
+          country: shippingAddress.country || "India",
+          isDefault: userAddressDoc.addresses.length === 0,
+        });
+        await userAddressDoc.save({ session });
+      }
+    } catch (addrErr) {
+      console.error("Failed to auto-save address during checkout:", addrErr);
     }
 
     // 3. Handle COD Payment Transaction
