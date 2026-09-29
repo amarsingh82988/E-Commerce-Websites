@@ -16,8 +16,20 @@ export async function findOrdersByUser(userId) {
   return await Order.find({ user: userId, isDeleted: false }).sort({ createdAt: -1 }).exec();
 }
 
-export async function findAllOrders(filter = {}) {
-  return await Order.find({ isDeleted: false, ...filter }).populate("user").sort({ createdAt: -1 }).exec();
+/**
+ * findAllOrders
+ * --- MULTI-VENDOR: When sellerId is provided, only returns orders that contain
+ * items belonging to that seller (uses the `sellers` array for efficient lookup). ---
+ */
+export async function findAllOrders(filter = {}, sellerId = null) {
+  const query = { isDeleted: false, ...filter };
+
+  // --- MULTI-VENDOR: Filter orders to those containing this seller's items ---
+  if (sellerId) {
+    query.sellers = sellerId;
+  }
+
+  return await Order.find(query).populate("user").sort({ createdAt: -1 }).exec();
 }
 
 export async function createOrder(orderData) {
@@ -25,12 +37,24 @@ export async function createOrder(orderData) {
   return await order.save();
 }
 
-export async function updateOrderStatus(id, status, note, trackingNumber, courier) {
+/**
+ * updateOrderStatus
+ * --- MULTI-VENDOR: When sellerId is provided, ensures the seller owns
+ * at least one item in the order before allowing status updates. ---
+ */
+export async function updateOrderStatus(id, status, note, trackingNumber, courier, sellerId = null) {
   let order = await Order.findById(id).catch(() => null);
   if (!order) {
     order = await Order.findOne({ orderNumber: id });
   }
   if (!order) return null;
+
+  // --- MULTI-VENDOR: Verify seller ownership ---
+  if (sellerId) {
+    const sellerIdStr = sellerId.toString();
+    const hasSeller = (order.sellers || []).some(s => s.toString() === sellerIdStr);
+    if (!hasSeller) return null; // Seller doesn't own any items in this order
+  }
 
   order.status = status;
   if (trackingNumber) order.trackingNumber = trackingNumber;

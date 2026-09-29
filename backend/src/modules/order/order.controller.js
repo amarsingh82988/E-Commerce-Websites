@@ -55,6 +55,8 @@ async function calculateServerTotals(rawItems, paymentMethod, couponCode, sessio
       color: item.color || "",
       size: item.size || "",
       note: item.note || "",
+      // --- MULTI-VENDOR: Track which seller owns this item ---
+      seller: productDoc.seller || null,
     });
   }
 
@@ -133,6 +135,11 @@ export async function createOrder(req, res) {
     session = await mongoose.startSession();
     session.startTransaction();
 
+    // --- MULTI-VENDOR: Collect unique seller IDs from all items ---
+    const sellerIds = [...new Set(
+      processedItems.map(i => i.seller).filter(Boolean).map(s => s.toString())
+    )];
+
     // 2. Create Order record in DB
     const [order] = await Order.create(
       [
@@ -141,6 +148,8 @@ export async function createOrder(req, res) {
           user: userId,
           email: userEmail.toLowerCase(),
           items: processedItems,
+          // --- MULTI-VENDOR: Store seller IDs for efficient querying ---
+          sellers: sellerIds,
           shippingAddress: {
             fullName: shippingAddress.fullName.trim(),
             phone: shippingAddress.phone.trim(),

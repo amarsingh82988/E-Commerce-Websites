@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 
 const settingsSchema = new mongoose.Schema({
+  // --- MULTI-VENDOR: Links settings to a specific seller ---
+  // In single-seller mode, this is null (global settings).
+  // In multi-vendor mode, each seller has their own settings document.
+  seller: { type: mongoose.Schema.Types.ObjectId, ref: "User", index: true, default: null },
   storeName: { type: String, default: "Apne Hath Crafts" },
   contactEmail: String,
   phone: String,

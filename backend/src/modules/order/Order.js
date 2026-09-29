@@ -11,6 +11,8 @@ const itemSchema = new mongoose.Schema(
     color: String,
     size: String,
     note: String,
+    // --- MULTI-VENDOR: Tracks which seller owns this item ---
+    seller: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   },
   { _id: false },
 );
@@ -23,6 +25,9 @@ const orderSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", index: true },
     email: { type: String, required: true, lowercase: true, index: true },
     items: [itemSchema],
+    // --- MULTI-VENDOR: Array of unique seller IDs involved in this order ---
+    // Used for efficient querying so sellers can filter orders containing their items.
+    sellers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User", index: true }],
     shippingAddress: {
       fullName: String,
       phone: String,

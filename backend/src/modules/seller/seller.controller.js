@@ -1,26 +1,47 @@
 import { sellerService } from "./seller.service.js";
 import { User } from "../user/User.js";
+import { Product } from "../product/Product.js";
+import { Order } from "../order/Order.js";
 import { categoryRepository } from "../category/category.repository.js";
 import { productRepository } from "../product/product.repository.js";
 import { orderRepository } from "../order/order.repository.js";
 import { deleteFromCloudinary } from "../../utils/cloudinary.service.js";
 import { sessionService } from "../session/session.service.js";
 
+// ╔══════════════════════════════════════════════════════════════════════════╗
+// ║  SINGLE SELLER MODE TOGGLE                                              ║
+// ║  Set to `true`  → Only 1 seller can register. Seller ID filters are     ║
+// ║                    skipped. All products/orders are global.              ║
+// ║  Set to `false` → Multiple sellers can register. Every product, order,  ║
+// ║                    and settings query is filtered by req.user._id.      ║
+// ║                                                                         ║
+// ║  To switch to multi-vendor: change `true` to `false` below.             ║
+// ╚══════════════════════════════════════════════════════════════════════════╝
+const IS_SINGLE_SELLER_MODE = true;
+
+/**
+ * Helper: Returns the seller's ObjectId to use for data filtering.
+ * In single-seller mode, returns null (no filtering).
+ * In multi-vendor mode, returns req.user._id.
+ */
+function getSellerFilter(req) {
+  if (IS_SINGLE_SELLER_MODE) return null;
+  return req.user._id || req.user.id;
+}
 
 
+// ══════════════════════════════════════════════════════════════════════════════
+//  AUTH: Register, Verify, Login, Logout
+// ══════════════════════════════════════════════════════════════════════════════
 
 export async function sellerRegister(req, res) {
   try {
-    // --- SINGLE SELLER MODE TOGGLE ---
-    // Change this to false if you want to allow multiple sellers to register.
-    const IS_SINGLE_SELLER_MODE = true;
-    // ---------------------------------
-
+    // --- SINGLE SELLER MODE: Block registration if a seller already exists ---
     if (IS_SINGLE_SELLER_MODE) {
       const existingSeller = await User.findOne({ role: "seller" }).lean();
       if (existingSeller) {
-        return res.status(403).json({ 
-          message: "Registration is currently closed. Only one seller account is allowed in single-seller mode." 
+        return res.status(403).json({
+          message: "Registration is currently closed. Only one seller account is allowed in single-seller mode."
         });
       }
     }
@@ -104,24 +125,62 @@ export async function sellerLogout(req, res) {
 }
 
 
+// ══════════════════════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════════════════════════════════════
+
 export async function getDashboardStats(req, res) {
   try {
-    return res.json({ totalProducts: 0, totalOrders: 0, pendingOrders: 0, totalRevenue: 0 });
+    const sellerId = getSellerFilter(req);
+
+    // --- MULTI-VENDOR: Stats are scoped to this seller's data ---
+    const productFilter = { isDeleted: false };
+    const orderFilter = {};
+    if (sellerId) {
+      productFilter.seller = sellerId;
+      orderFilter.sellers = sellerId;
+    }
+
+    const [totalProducts, totalOrders, pendingOrders, revenueAgg] = await Promise.all([
+      Product.countDocuments(productFilter),
+      Order.countDocuments(orderFilter),
+      Order.countDocuments({ ...orderFilter, status: "pending" }),
+      Order.aggregate([
+        { $match: { ...orderFilter, paymentStatus: "paid" } },
+        { $group: { _id: null, total: { $sum: "$total" } } },
+      ]),
+    ]);
+
+    return res.json({
+      totalProducts,
+      totalOrders,
+      pendingOrders,
+      totalRevenue: revenueAgg.length > 0 ? revenueAgg[0].total : 0,
+    });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: "Server error" });
   }
 }
 
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  PRODUCTS
+// ══════════════════════════════════════════════════════════════════════════════
+
 export async function getAllProducts(req, res) {
   try {
     const { category, search, page, limit } = req.query;
+    const sellerId = getSellerFilter(req);
+
     const result = await productRepository.findAllProducts({
       category,
       search,
       page,
       limit,
       includeInactive: true,
+      // --- MULTI-VENDOR: Only show this seller's products ---
+      sellerId,
     });
     return res.json(result);
   } catch (err) {
@@ -140,7 +199,6 @@ export async function createProduct(req, res) {
       description,
       price,
       compareAtPrice,
-      
       category,
       stock,
       images,
@@ -162,7 +220,7 @@ export async function createProduct(req, res) {
       return res.status(400).json({ message: "Name, price, and category are required" });
     }
 
-    const product = await productRepository.createProduct({
+    const productData = {
       name,
       slug,
       sku,
@@ -185,7 +243,11 @@ export async function createProduct(req, res) {
       bestseller: Boolean(bestseller),
       newArrival: Boolean(newArrival),
       isActive: isActive !== undefined ? Boolean(isActive) : true,
-    });
+      // --- MULTI-VENDOR: Tag product with seller's ID ---
+      seller: req.user._id || req.user.id,
+    };
+
+    const product = await productRepository.createProduct(productData);
 
     return res.status(201).json({ message: "Product created successfully", product });
   } catch (err) {
@@ -212,12 +274,15 @@ export async function updateProduct(req, res) {
   try {
     const { id } = req.params;
     const updateData = req.body;
-    
-    const oldProduct = await productRepository.findProductById(id);
+    const sellerId = getSellerFilter(req);
+
+    // --- MULTI-VENDOR: findProductById checks seller ownership ---
+    const oldProduct = await productRepository.findProductById(id, sellerId);
     if (!oldProduct) return res.status(404).json({ message: "Product not found" });
 
-    const product = await productRepository.updateProduct(id, updateData);
-    
+    // --- MULTI-VENDOR: updateProduct checks seller ownership ---
+    const product = await productRepository.updateProduct(id, updateData, sellerId);
+
     // Cleanup removed images from Cloudinary
     if (updateData.images && Array.isArray(updateData.images)) {
       const oldImages = oldProduct.images || [];
@@ -238,12 +303,15 @@ export async function updateProduct(req, res) {
 export async function deleteProduct(req, res) {
   try {
     const { id } = req.params;
-    
-    const oldProduct = await productRepository.findProductById(id);
+    const sellerId = getSellerFilter(req);
+
+    // --- MULTI-VENDOR: findProductById checks seller ownership ---
+    const oldProduct = await productRepository.findProductById(id, sellerId);
     if (!oldProduct) return res.status(404).json({ message: "Product not found" });
 
-    const deleted = await productRepository.softDeleteProduct(id, req.user._id);
-    
+    // --- MULTI-VENDOR: softDeleteProduct checks seller ownership ---
+    const deleted = await productRepository.softDeleteProduct(id, req.user._id, sellerId);
+
     // Cleanup images from Cloudinary when deleted from DB
     if (oldProduct.images && Array.isArray(oldProduct.images)) {
       for (const imgUrl of oldProduct.images) {
@@ -265,7 +333,10 @@ export async function toggleProductBadges(req, res) {
   try {
     const { id } = req.params;
     const { featured, bestseller, newArrival } = req.body;
-    const product = await productRepository.toggleBadges(id, { featured, bestseller, newArrival });
+    const sellerId = getSellerFilter(req);
+
+    // --- MULTI-VENDOR: toggleBadges checks seller ownership ---
+    const product = await productRepository.toggleBadges(id, { featured, bestseller, newArrival }, sellerId);
     if (!product) return res.status(404).json({ message: "Product not found" });
 
     return res.json({ message: "Product badges updated", product });
@@ -275,6 +346,10 @@ export async function toggleProductBadges(req, res) {
   }
 }
 
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  CATEGORIES
+// ══════════════════════════════════════════════════════════════════════════════
 
 export async function getCategories(req, res) {
   try {
@@ -319,12 +394,12 @@ export async function updateCategory(req, res) {
   try {
     const { id } = req.params;
     const updateData = req.body;
-    
+
     const oldCategory = await categoryRepository.findCategoryById(id);
     if (!oldCategory) return res.status(404).json({ message: "Category not found" });
 
     const category = await categoryRepository.updateCategory(id, updateData);
-    
+
     // Cleanup removed image from Cloudinary
     if (updateData.image !== undefined && oldCategory.image && updateData.image !== oldCategory.image) {
       await deleteFromCloudinary(oldCategory.image);
@@ -340,12 +415,12 @@ export async function updateCategory(req, res) {
 export async function deleteCategory(req, res) {
   try {
     const { id } = req.params;
-    
+
     const oldCategory = await categoryRepository.findCategoryById(id);
     if (!oldCategory) return res.status(404).json({ message: "Category not found" });
 
     const deleted = await categoryRepository.deleteCategory(id);
-    
+
     // Cleanup image from Cloudinary when deleted from DB
     if (oldCategory.image) {
       await deleteFromCloudinary(oldCategory.image);
@@ -359,9 +434,16 @@ export async function deleteCategory(req, res) {
 }
 
 
+// ══════════════════════════════════════════════════════════════════════════════
+//  ORDERS
+// ══════════════════════════════════════════════════════════════════════════════
+
 export async function getAllOrders(req, res) {
   try {
-    const orders = await orderRepository.findAllOrders();
+    const sellerId = getSellerFilter(req);
+
+    // --- MULTI-VENDOR: Only fetch orders containing this seller's items ---
+    const orders = await orderRepository.findAllOrders({}, sellerId);
     return res.json(orders);
   } catch (err) {
     console.error("Error fetching all orders:", err);
@@ -377,6 +459,15 @@ export async function getOrderById(req, res) {
       order = await orderRepository.findOrderByNumber(id);
     }
     if (!order) return res.status(404).json({ message: "Order not found" });
+
+    // --- MULTI-VENDOR: Verify seller has items in this order ---
+    const sellerId = getSellerFilter(req);
+    if (sellerId) {
+      const sellerIdStr = sellerId.toString();
+      const hasSeller = (order.sellers || []).some(s => s.toString() === sellerIdStr);
+      if (!hasSeller) return res.status(404).json({ message: "Order not found" });
+    }
+
     return res.json(order);
   } catch (err) {
     console.error("Error fetching order:", err);
@@ -388,7 +479,10 @@ export async function updateOrderStatus(req, res) {
   try {
     const { id } = req.params;
     const { status, note, trackingNumber, courier } = req.body;
-    const order = await orderRepository.updateOrderStatus(id, status, note, trackingNumber, courier);
+    const sellerId = getSellerFilter(req);
+
+    // --- MULTI-VENDOR: updateOrderStatus verifies seller ownership ---
+    const order = await orderRepository.updateOrderStatus(id, status, note, trackingNumber, courier, sellerId);
     if (!order) return res.status(404).json({ message: "Order not found" });
     return res.json({ message: "Order status updated", order });
   } catch (err) {
@@ -396,6 +490,11 @@ export async function updateOrderStatus(req, res) {
     return res.status(500).json({ message: "Server error" });
   }
 }
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+//  CUSTOM ORDERS (placeholder)
+// ══════════════════════════════════════════════════════════════════════════════
 
 export async function getAllRequests(req, res) {
   try {
@@ -428,6 +527,3 @@ export async function addUpdate(req, res) {
     return res.status(500).json({ message: "Server error" });
   }
 }
-
-
-

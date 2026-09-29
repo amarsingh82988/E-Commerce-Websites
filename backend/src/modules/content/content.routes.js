@@ -127,9 +127,15 @@ router.put("/", protectContentAdmin, async (req, res) => {
  */
 router.get("/settings", protectContentAdmin, async (req, res) => {
   try {
-    let settings = await Settings.findOne().lean();
+    // --- MULTI-VENDOR: Fetch settings specific to this seller ---
+    const sellerId = req.user?._id || null;
+    let settings = await Settings.findOne({ seller: sellerId }).lean();
     if (!settings) {
-      settings = await Settings.create({ storeName: "Apne Hath Crafts" });
+      // Fallback: try global settings (seller=null)
+      settings = await Settings.findOne({ seller: null }).lean();
+    }
+    if (!settings) {
+      settings = await Settings.create({ storeName: "Apne Hath Crafts", seller: sellerId });
       settings = settings.toObject();
     }
     // Decrypt keys to send to admin, but mask them
@@ -153,7 +159,13 @@ router.get("/settings", protectContentAdmin, async (req, res) => {
 router.put("/settings", protectContentAdmin, async (req, res) => {
   try {
     const updateData = req.body;
-    let settings = await Settings.findOne();
+    // --- MULTI-VENDOR: Scope settings to this seller ---
+    const sellerId = req.user?._id || null;
+    let settings = await Settings.findOne({ seller: sellerId });
+    if (!settings) {
+      // Fallback: try global settings
+      settings = await Settings.findOne({ seller: null });
+    }
     
     // Encrypt secrets if they were updated (and are not the hidden mask)
     if (updateData.paymentGateway) {
@@ -171,9 +183,10 @@ router.put("/settings", protectContentAdmin, async (req, res) => {
     }
 
     if (!settings) {
+      updateData.seller = sellerId;
       settings = await Settings.create(updateData);
     } else {
-      settings = await Settings.findOneAndUpdate({}, updateData, { new: true });
+      settings = await Settings.findOneAndUpdate({ _id: settings._id }, updateData, { new: true });
     }
     return res.json({ success: true, settings });
   } catch (err) {

@@ -9,6 +9,10 @@ const productSchema = new mongoose.Schema(
     description: { type: String, default: "" },
     price: { type: Number, required: true, min: 0 },
     compareAtPrice: { type: Number, min: 0 },
+    // --- MULTI-VENDOR: Links product to its seller ---
+    // In single-seller mode this field is optional and ignored in queries.
+    // In multi-vendor mode this field is used to segregate data per seller.
+    seller: { type: mongoose.Schema.Types.ObjectId, ref: "User", index: true, default: null },
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true, index: true },
     stock: { type: Number, default: 0, min: 0 },
     images: [String],
