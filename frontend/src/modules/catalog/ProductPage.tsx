@@ -66,7 +66,7 @@ export default function ProductPage() {
     if (product?.category) {
       getPublicProducts({ category: product.category, limit: 4 }).then((res) => {
         if (res && res.products && res.products.length > 0) {
-          setRelatedProducts(res.products.filter((p) => p.id !== product.id && p.slug !== product.slug).slice(0, 3));
+          setRelatedProducts(res.products.filter((p) => p.id !== product.id && p.slug !== product.slug).slice(0, 4));
         }
       });
     }
@@ -196,8 +196,8 @@ export default function ProductPage() {
         </nav>
 
         <div className="mt-6 grid gap-12 lg:grid-cols-2">
-          <div>
-            <div className="overflow-hidden rounded-[1.75rem] border border-border bg-secondary">
+          <div className="lg:sticky lg:top-8 h-fit">
+            <div className="overflow-hidden rounded-[1.75rem] border border-border bg-secondary aspect-square">
               <img
                 src={productImages[activeImage] || product.featuredImage}
                 alt={product.name}
@@ -547,7 +547,7 @@ export default function ProductPage() {
         {displayRelated.length > 0 && (
           <section className="mt-20">
             <h2 className="font-display text-3xl">You may also love</h2>
-            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {displayRelated.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}

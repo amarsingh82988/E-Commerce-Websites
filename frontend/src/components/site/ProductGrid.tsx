@@ -97,7 +97,7 @@ export function ProductGrid({
   };
 
   return (
-    <div className="container-page grid gap-10 py-12 lg:grid-cols-[260px_1fr]">
+    <div className="container-page grid gap-10 py-12 lg:grid-cols-[240px_1fr]">
       <aside className={`${showFilters ? "block" : "hidden"} lg:block`}>
         <div className="space-y-8 rounded-2xl border border-border bg-card p-6">
           {!lockedCategory && (
@@ -112,7 +112,7 @@ export function ProductGrid({
                       checked={selectedCats.includes(c.slug)}
                       onCheckedChange={() => toggleCat(c.slug)}
                     />
-                    <Label htmlFor={`cat-${c.slug}`} className="text-sm font-normal">
+                    <Label htmlFor={`cat-${c.slug}`} className="text-sm font-normal cursor-pointer flex-1">
                       {c.name}
                     </Label>
                   </div>
@@ -221,7 +221,7 @@ export function ProductGrid({
             </p>
           </div>
         ) : (
-          <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-6 grid gap-6 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
             {visible.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

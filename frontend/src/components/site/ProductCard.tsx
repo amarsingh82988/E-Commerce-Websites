@@ -17,7 +17,7 @@ export function ProductCard({ product }: { product: Product }) {
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--shadow-soft)] transition-shadow duration-300 hover:shadow-[var(--shadow-lift)]">
       <Link
         to={`/product/${product.slug}`}
-        className="relative block aspect-[4/5] overflow-hidden bg-secondary"
+        className="relative block aspect-square overflow-hidden bg-secondary"
       >
         <img
           src={product.featuredImage}
@@ -68,7 +68,7 @@ export function ProductCard({ product }: { product: Product }) {
             {product.name}
           </Link>
         </h3>
-        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.shortDescription || "") }}></p>
+        <p className="mt-1 line-clamp-1 text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.shortDescription || "") }}></p>
         <div className="mt-3 flex items-baseline gap-2">
           <span className="text-base font-semibold">{formatINR(product.price)}</span>
           {product.compareAtPrice && (

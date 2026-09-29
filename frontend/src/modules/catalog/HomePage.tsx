@@ -52,7 +52,7 @@ export default function Home() {
     <PageShell>
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-border">
-        <div className="container-page grid items-center gap-12 py-14 md:grid-cols-2 md:py-24">
+        <div className="container-page grid items-center gap-8 py-14 md:grid-cols-2 md:py-24">
           <div>
             <p className="eyebrow">Handcrafted with patience</p>
             <h1 className="mt-4 font-display text-5xl leading-[1.05] md:text-6xl lg:text-7xl whitespace-pre-line">
@@ -69,7 +69,7 @@ export default function Home() {
                 <Link to="/about">Explore Handmade</Link>
               </Button>
             </div>
-            <div className="mt-10 flex items-center gap-6 text-sm text-muted-foreground">
+            <div className="mt-6 md:mt-8 flex items-center gap-6 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5">
                 <Star className="size-4 fill-accent text-accent" /> 4.9 average rating
               </span>
@@ -95,13 +95,13 @@ export default function Home() {
       </section>
 
       {/* Categories */}
-      <section className="container-page py-20">
+      <section className="container-page py-12 md:py-16">
         <SectionHead
           eyebrow="Browse"
           title="Featured Categories"
           intro="From forever bouquets to everyday totes — find the piece that feels like you."
         />
-        <div className="mt-10 grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
+        <div className="mt-6 md:mt-8 grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
           {categoryList.slice(0, 7).map((c) => (
             <Link
               key={c.slug}
@@ -130,16 +130,16 @@ export default function Home() {
       </section>
 
       {/* Bestsellers */}
-      <section className="bg-secondary/40 py-20">
+      <section className="bg-secondary/40 py-12 md:py-16">
         <div className="container-page">
           <SectionHead eyebrow="Loved most" title="Best Sellers" intro="The pieces our customers keep coming back for." />
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 md:mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {bestsellerList.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
 
           </div>
-          <div className="mt-10 text-center">
+          <div className="mt-6 md:mt-8 text-center">
             <Button asChild variant="outline" size="lg">
               <Link to="/shop">
                 View all products <ArrowRight className="ml-1 size-4" />
@@ -150,24 +150,26 @@ export default function Home() {
       </section>
 
       {/* Why us */}
-      <section className="container-page py-20">
+      <section className="container-page py-12 md:py-16">
         <SectionHead eyebrow="Why us" title="Why Apne Hath Crochet?" />
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-6 md:mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {benefits.map((b) => (
-            <div key={b.title} className="rounded-2xl border border-border bg-card p-6 text-center">
-              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-secondary">
+            <div key={b.title} className="rounded-2xl border border-border bg-card p-5 text-left flex items-start gap-4 shadow-sm">
+              <div className="flex shrink-0 size-10 items-center justify-center rounded-full bg-secondary mt-0.5">
                 <b.icon className="size-5 text-accent" />
               </div>
-              <h3 className="mt-4 font-display text-lg">{b.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{b.text}</p>
+              <div>
+                <h3 className="font-display text-base font-semibold">{b.title}</h3>
+                <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{b.text}</p>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
       {/* Story */}
-      <section className="bg-secondary/40 py-20">
-        <div className="container-page grid items-center gap-12 md:grid-cols-2">
+      <section className="bg-secondary/40 py-12 md:py-16">
+        <div className="container-page grid items-center gap-8 md:grid-cols-2">
           <div className="overflow-hidden rounded-[2rem] border border-border shadow-[var(--shadow-soft)]">
             <img
               src={storyImage}
@@ -198,8 +200,8 @@ export default function Home() {
       </section>
 
       {/* Custom orders CTA */}
-      <section className="container-page py-20">
-        <div className="rounded-[2rem] border border-border bg-card px-8 py-16 text-center shadow-[var(--shadow-soft)]">
+      <section className="container-page py-12 md:py-16">
+        <div className="rounded-[2rem] border border-border bg-card px-6 py-10 md:px-8 md:py-12 text-center shadow-[var(--shadow-soft)]">
           <p className="eyebrow">Custom crochet</p>
           <h2 className="mt-3 font-display text-4xl md:text-5xl">Want Something Made Just for You?</h2>
           <p className="mx-auto mt-4 max-w-lg text-muted-foreground">
@@ -213,10 +215,10 @@ export default function Home() {
       </section>
 
       {/* Reviews */}
-      <section className="bg-secondary/40 py-20">
+      <section className="bg-secondary/40 py-12 md:py-16">
         <div className="container-page">
           <SectionHead eyebrow="Kind words" title="Customer Reviews" />
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
+          <div className="mt-6 md:mt-8 grid gap-6 md:grid-cols-3">
             {featuredReviews.length > 0 ? (
               featuredReviews.map((t) => (
                 <figure key={t.id} className="rounded-2xl border border-border bg-card p-6 flex flex-col h-full">
@@ -248,9 +250,9 @@ export default function Home() {
       </section>
 
       {/* Instagram */}
-      <section className="container-page py-20">
+      <section className="container-page py-12 md:py-16">
         <SectionHead eyebrow="@apnehathcrochet" title="From our studio" intro="Follow along for works in progress and new drops." />
-        <div className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="mt-6 md:mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
           {bestsellerList.slice(0, 4).map((p: any) => (
             <div key={p.id} className="aspect-square overflow-hidden rounded-2xl border border-border bg-secondary">
               <img
