@@ -57,8 +57,8 @@ export async function updateOrderStatus(id, status, note, trackingNumber, courie
   }
 
   order.status = status;
-  if (trackingNumber) order.trackingNumber = trackingNumber;
-  if (courier) order.courier = courier;
+  if (trackingNumber !== undefined) order.trackingNumber = trackingNumber;
+  if (courier !== undefined) order.courier = courier;
 
   order.timeline.push({ status, note: note || `Status updated to ${status}` });
   return await order.save();

@@ -165,7 +165,7 @@ export function ShopProvider({ children }: { children: ReactNode }) {
               } else {
                 merged[idx] = {
                   ...merged[idx]!,
-                  qty: (merged[idx]?.qty || 0) + guestLine.qty,
+                  qty: Math.max((merged[idx]?.qty || 0), guestLine.qty),
                 };
               }
             }

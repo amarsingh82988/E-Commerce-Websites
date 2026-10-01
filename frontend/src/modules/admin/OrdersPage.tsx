@@ -53,7 +53,7 @@ export default function AdminOrdersPage() {
       await updateSellerOrderStatus(id, newStatus, statusUpdateNote, trackingNumber, courier);
       const orderIndex = orders.findIndex((o) => (o._id === id || o.orderNumber === id));
       if (orderIndex !== -1) {
-        const updatedOrder = { ...orders[orderIndex], status: newStatus, courier: courier || orders[orderIndex].courier, trackingNumber: trackingNumber || orders[orderIndex].trackingNumber };
+        const updatedOrder = { ...orders[orderIndex], status: newStatus, courier, trackingNumber };
         const newOrders = [...orders];
         newOrders[orderIndex] = updatedOrder;
         setOrders(newOrders);
@@ -270,6 +270,13 @@ export default function AdminOrdersPage() {
                         className="h-8 text-sm"
                       />
                     </div>
+                    <Button 
+                      onClick={() => updateOrderStatus((selectedOrder.orderNumber || selectedOrder._id), selectedOrder.status)} 
+                      className="w-full mt-2" 
+                      size="sm"
+                    >
+                      Save Tracking & Notes
+                    </Button>
                   </div>
                 </section>
 
