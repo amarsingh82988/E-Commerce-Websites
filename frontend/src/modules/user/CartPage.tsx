@@ -54,8 +54,6 @@ export default function CartPage() {
   };
 
   if (cart.length === 0) {
-    const featuredItems = allProducts.slice(0, 3);
-
     return (
       <PageShell>
         <PageHeader eyebrow="Your cart" title="Your cart is empty" intro="Little things, made by hand — go find yours." />
@@ -75,17 +73,6 @@ export default function CartPage() {
               </Link>
             </Button>
           </div>
-
-          {featuredItems.length > 0 && (
-            <div className="pt-12 border-t border-border max-w-5xl mx-auto text-left">
-              <h3 className="font-display text-2xl mb-6 text-center">Trending Handicraft Recommendations</h3>
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {featuredItems.map((p) => (
-                  <ProductCard key={p.id} product={p} />
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </PageShell>
     );
